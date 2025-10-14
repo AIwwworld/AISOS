@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美链合创（深圳）科技有限公司 - AI + 产业联合营销</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #0a0e27;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 动态背景 */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #7b2ff7);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(100px, -100px) scale(1.1); }
+            50% { transform: translate(-50px, -150px) scale(0.9); }
+            75% { transform: translate(-100px, 50px) scale(1.05); }
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #00d4ff;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .lang-switch {
+            padding: 8px 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .lang-switch:hover {
+            background: #00d4ff;
+            color: #0a0e27;
+        }
+
+        /* 主区域 */
+        section {
+            position: relative;
+            min-height: 100vh;
+            padding: 100px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideDown 1s ease-out;
+        }
+
+        .hero .subtitle {
+            font-size: 28px;
+            color: #7b2ff7;
+            margin-bottom: 30px;
+            animation: slideUp 1s ease-out 0.2s backwards;
+        }
+
+        .company-name {
+            margin-top: 50px;
+            font-size: 14px;
+            color: #666;
+            opacity: 0.6;
+            animation: fadeIn 1s ease-out 0.6s backwards;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #b0b0b0;
+            max-width: 700px;
+            margin: 0 auto 50px;
+            line-height: 1.8;
+            animation: fadeIn 1s ease-out 0.4s backwards;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3); }
+            50% { box-shadow: 0 10px 40px rgba(0, 212, 255, 0.5); }
+        }
+
+        /* 服务区域 */
+        .services {
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 80px;
+            background: linear-gradient(135deg, #ffffff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: #00d4ff;
+            box-shadow: 0 20px 50px rgba(0, 212, 255, 0.3);
+        }
+
+        .service-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+
+        .service-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* 关于我们 */
+        .about {
+            flex-direction: column;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .about-content {
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .about-content p {
+            font-size: 18px;
+            line-height: 2;
+            color: #b0b0b0;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 60px;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #b0b0b0;
+            margin-top: 10px;
+        }
+
+        /* 联系方式 */
+        .contact {
+            flex-direction: column;
+        }
+
+        .contact-info {
+            display: flex;
+            gap: 60px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .contact-item {
+            text-align: center;
+        }
+
+        .contact-item h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .contact-item p {
+            color: #b0b0b0;
+            font-size: 16px;
+        }
+
+        /* 页脚 */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 40px 5%;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        footer p {
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .subtitle {
+                font-size: 20px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .service-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 动态背景 -->
+    <div class="bg-animation" id="bgAnimation"></div>
+
+    <!-- 导航栏 -->
+    <nav>
+        <div class="logo">美链合创</div>
+        <div class="nav-links">
+            <a href="#home" data-zh="首页" data-en="Home">首页</a>
+            <a href="#services" data-zh="服务" data-en="Services">服务</a>
+            <a href="#about" data-zh="关于我们" data-en="About">关于我们</a>
+            <a href="#contact" data-zh="联系我们" data-en="Contact">联系我们</a>
+        </div>
+        <button class="lang-switch" id="langSwitch">EN</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <h1 class="translate" data-zh="AI + 产业联合营销" data-en="AI + Industrial Joint Marketing">AI + 产业联合营销</h1>
+        <div class="subtitle translate" data-zh="智能驱动 · 产业赋能 · 精准增长" data-en="Intelligence-Driven · Industry-Empowered · Precision Growth">智能驱动 · 产业赋能 · 精准增长</div>
+        <p class="translate" data-zh="融合人工智能与产业深度，打造智能化营销新生态。我们致力于为企业提供创新的AI驱动营销解决方案，助力产业数字化转型升级。" data-en="Integrating AI with industry depth to create a new intelligent marketing ecosystem. We are committed to providing innovative AI-driven marketing solutions for enterprises, facilitating digital transformation and upgrading.">融合人工智能与产业深度，打造智能化营销新生态。我们致力于为企业提供创新的AI驱动营销解决方案，助力产业数字化转型升级。</p>
+        <a href="#contact" class="cta-button translate" data-zh="立即咨询" data-en="Contact Us">立即咨询</a>
+        <div class="company-name translate" data-zh="美链合创（深圳）科技有限公司" data-en="Meilian Hechuang (Shenzhen) Technology Co., Ltd.">美链合创（深圳）科技有限公司</div>
+    </section>
+
+    <!-- 服务区域 -->
+    <section class="services" id="services">
+        <h2 class="section-title translate" data-zh="核心服务" data-en="Core Services">核心服务</h2>
+        <div class="service-grid">
+            <div class="service-card">
+                <div class="service-icon">🤖</div>
+                <h3 class="translate" data-zh="AI智能营销" data-en="AI Smart Marketing">AI智能营销</h3>
+                <p class="translate" data-zh="运用前沿AI技术，实现精准用户画像、智能内容生成和自动化营销决策，大幅提升营销ROI。" data-en="Leverage cutting-edge AI technology to achieve precise user profiling, intelligent content generation, and automated marketing decisions, significantly improving marketing ROI.">运用前沿AI技术，实现精准用户画像、智能内容生成和自动化营销决策，大幅提升营销ROI。</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔗</div>
+                <h3 class="translate" data-zh="产业链整合" data-en="Industry Chain Integration">产业链整合</h3>
+                <p class="translate" data-zh="深度连接产业上下游资源，构建协同营销网络，实现资源共享和价值共创。" data-en="Deeply connect upstream and downstream industrial resources, build a collaborative marketing network, and achieve resource sharing and value co-creation.">深度连接产业上下游资源，构建协同营销网络，实现资源共享和价值共创。</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">📊</div>
+                <h3 class="translate" data-zh="数据驱动增长" data-en="Data-Driven Growth">数据驱动增长</h3>
+                <p class="translate" data-zh="基于大数据分析和AI算法，提供精准的市场洞察和增长策略，助力企业可持续发展。" data-en="Based on big data analysis and AI algorithms, provide precise market insights and growth strategies to support sustainable business development.">基于大数据分析和AI算法，提供精准的市场洞察和增长策略，助力企业可持续发展。</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💡</div>
+                <h3 class="translate" data-zh="创新营销策略" data-en="Innovative Marketing Strategy">创新营销策略</h3>
+                <p class="translate" data-zh="结合行业特点和AI能力，定制化创新营销方案，打造差异化竞争优势。" data-en="Combine industry characteristics with AI capabilities to customize innovative marketing solutions and create differentiated competitive advantages.">结合行业特点和AI能力，定制化创新营销方案，打造差异化竞争优势。</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🎯</div>
+                <h3 class="translate" data-zh="精准获客" data-en="Precise Customer Acquisition">精准获客</h3>
+                <p class="translate" data-zh="利用AI技术实现多渠道精准获客，提高转化率，降低获客成本。" data-en="Use AI technology to achieve precise multi-channel customer acquisition, improve conversion rates, and reduce customer acquisition costs.">利用AI技术实现多渠道精准获客，提高转化率，降低获客成本。</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🚀</div>
+                <h3 class="translate" data-zh="品牌加速" data-en="Brand Acceleration">品牌加速</h3>
+                <p class="translate" data-zh="通过AI赋能的品牌传播策略，快速提升品牌知名度和市场影响力。" data-en="Rapidly enhance brand awareness and market influence through AI-powered brand communication strategies.">通过AI赋能的品牌传播策略，快速提升品牌知名度和市场影响力。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于我们 -->
+    <section class="about" id="about">
+        <h2 class="section-title translate" data-zh="关于我们" data-en="About Us">关于我们</h2>
+        <div class="about-content">
+            <p class="translate" data-zh="美链合创（深圳）科技有限公司是一家专注于AI与产业融合的创新型科技企业。我们深耕人工智能技术在营销领域的应用，致力于打破传统营销边界，构建智能化、数据化的新营销生态。" data-en="Meilian Hechuang (Shenzhen) Technology Co., Ltd. is an innovative technology company focusing on the integration of AI and industry. We deeply cultivate the application of artificial intelligence technology in the marketing field, committed to breaking traditional marketing boundaries and building an intelligent, data-driven new marketing ecosystem.">美链合创（深圳）科技有限公司是一家专注于AI与产业融合的创新型科技企业。我们深耕人工智能技术在营销领域的应用，致力于打破传统营销边界，构建智能化、数据化的新营销生态。</p>
+            <p class="translate" data-zh="我们拥有丰富的实战经验，团队成员在跨境电商、假发行业等垂直领域积累了深厚的营销实践经验。通过小成本投入实现高效营收增长，我们深知如何用AI技术帮助企业降本增效，实现业务突破。" data-en="We have rich practical experience. Our team members have accumulated profound marketing practice experience in vertical fields such as cross-border e-commerce and the wig industry. By achieving efficient revenue growth with small-cost investment, we deeply understand how to use AI technology to help enterprises reduce costs, increase efficiency, and achieve business breakthroughs.">我们拥有丰富的实战经验，团队成员在跨境电商、假发行业等垂直领域积累了深厚的营销实践经验。通过小成本投入实现高效营收增长，我们深知如何用AI技术帮助企业降本增效，实现业务突破。</p>
+            <p class="translate" data-zh="凭借强大的技术实力和行业洞察，我们致力于为更多企业提供卓越的AI营销解决方案，助力客户实现业务增长和数字化转型。" data-en="With strong technical capabilities and industry insights, we are committed to providing excellent AI marketing solutions for more enterprises, helping clients achieve business growth and digital transformation.">凭借强大的技术实力和行业洞察，我们致力于为更多企业提供卓越的AI营销解决方案，助力客户实现业务增长和数字化转型。</p>
+        </div>
+    </section>
+
+    <!-- 联系我们 -->
+    <section class="contact" id="contact">
+        <h2 class="section-title translate" data-zh="联系我们" data-en="Contact Us">联系我们</h2>
+        <div class="contact-info">
+            <div class="contact-item">
+                <h3 class="translate" data-zh="📍 公司地址" data-en="📍 Address">📍 公司地址</h3>
+                <p class="translate" data-zh="广东省深圳市" data-en="Shenzhen, Guangdong, China">广东省深圳市</p>
+            </div>
+            <div class="contact-item">
+                <h3 class="translate" data-zh="📧 商务邮箱" data-en="📧 Email">📧 商务邮箱</h3>
+                <p>contact@meilianhechuang.com</p>
+            </div>
+            <div class="contact-item">
+                <h3 class="translate" data-zh="📱 联系电话" data-en="📱 Phone">📱 联系电话</h3>
+                <p>400-XXX-XXXX</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <p class="translate" data-zh="&copy; 2025 美链合创（深圳）科技有限公司 版权所有 | 粤ICP备XXXXXXXX号" data-en="&copy; 2025 Meilian Hechuang (Shenzhen) Technology Co., Ltd. All Rights Reserved">&copy; 2025 美链合创（深圳）科技有限公司 版权所有 | 粤ICP备XXXXXXXX号</p>
+    </footer>
+
+    <script>
+        // 生成动态背景粒子
+        const bgAnimation = document.getElementById('bgAnimation');
+        const particleCount = 30;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.width = Math.random() * 100 + 50 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+            bgAnimation.appendChild(particle);
+        }
+
+        // 语言切换功能
+        let currentLang = 'zh';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            const langButton = document.getElementById('langSwitch');
+            langButton.textContent = currentLang === 'zh' ? 'EN' : '中文';
+
+            // 更新所有需要翻译的元素
+            document.querySelectorAll('.translate').forEach(el => {
+                const text = el.getAttribute('data-' + currentLang);
+                if (text) {
+                    if (el.tagName === 'A' || el.tagName === 'BUTTON') {
+                        el.textContent = text;
+                    } else {
+                        el.innerHTML = text;
+                    }
+                }
+            });
+
+            // 更新导航链接
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                const text = link.getAttribute('data-' + currentLang);
+                if (text) {
+                    link.textContent = text;
+                }
+            });
+        }
+
+        // 绑定语言切换按钮事件
+        document.getElementById('langSwitch').addEventListener('click', toggleLanguage);
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 滚动时导航栏效果
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 100) {
+                nav.style.background = 'rgba(10, 14, 39, 0.95)';
+            } else {
+                nav.style.background = 'rgba(10, 14, 39, 0.8)';
+            }
+
+            lastScroll = currentScroll;
+        });
+    </script>
+</body>
+</html>
