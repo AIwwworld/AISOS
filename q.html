@@ -254,13 +254,6 @@
             color: #999;
         }
 
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 16px;
-            opacity: 0.3;
-        }
-
         .info-box {
             background: #e3f2fd;
             border: 1px solid #90caf9;
@@ -291,7 +284,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.9);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -308,12 +301,13 @@
             max-width: 90%;
             max-height: 90%;
             position: relative;
+            text-align: center;
         }
 
-        #video {
+        #reader {
             width: 100%;
             max-width: 500px;
-            border-radius: 8px;
+            margin: 0 auto;
         }
 
         .close-btn {
@@ -327,14 +321,20 @@
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            z-index: 10;
         }
 
-        .scan-result {
+        .scan-status {
             margin-top: 10px;
             padding: 10px;
-            background: #e8f5e9;
+            background: #fff3e0;
             border-radius: 4px;
             font-weight: bold;
+            color: #e65100;
+        }
+
+        .scan-success {
+            background: #e8f5e9;
             color: #2e7d32;
         }
 
@@ -430,6 +430,7 @@
                 <li>• <strong>手机使用</strong>：点击"打开摄像头"按钮，对准条码/二维码扫描</li>
                 <li>• 开启"连续扫码模式"后，每次添加后会自动聚焦输入框，方便连续扫描</li>
                 <li>• 支持手动输入条码内容并添加</li>
+                <li>• 支持多种格式：二维码(QR)、条形码(EAN/UPC/CODE128等)</li>
                 <li>• 点击"导出Excel"可导出CSV格式文件（Excel可直接打开）</li>
                 <li>• 数据自动保存在浏览器本地，刷新页面不会丢失</li>
             </ul>
@@ -441,20 +442,17 @@
         <div class="modal-content">
             <button class="close-btn" id="closeCamera">关闭</button>
             <h3 style="margin-bottom: 10px;">对准条码/二维码</h3>
-            <video id="video" autoplay playsinline></video>
-            <canvas id="canvas" style="display: none;"></canvas>
-            <div id="scanResult" class="scan-result" style="display: none;"></div>
+            <div id="reader"></div>
+            <div id="scanStatus" class="scan-status">准备扫描...</div>
         </div>
     </div>
 
-    <!-- 使用 jsQR 库来解析二维码 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <!-- 使用 html5-qrcode 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <script>
         let records = [];
-        let stream = null;
-        let scanning = false;
+        let html5QrCode = null;
 
         // 页面加载时读取本地数据
         window.addEventListener('DOMContentLoaded', function() {
@@ -509,8 +507,10 @@
             let type = '二维码';
             if (/^[0-9]{8,13}$/.test(content)) {
                 type = '条形码';
-            } else if (content.includes('CODE_128')) {
+            } else if (content.includes('CODE_128') || content.includes('CODE128')) {
                 type = '条形码（CODE_128）';
+            } else if (/^[0-9A-Z\-\.\/\+\$\%\s]+$/.test(content) && content.length < 50) {
+                type = '条形码';
             }
 
             // 创建新记录
@@ -590,7 +590,7 @@
                 html += '<tr>';
                 html += '<td>' + record.number + '</td>';
                 html += '<td><span class="type-badge">' + record.type + '</span></td>';
-                html += '<td style="font-family: monospace; font-size: 13px;">' + record.content + '</td>';
+                html += '<td style="font-family: monospace; font-size: 13px; word-break: break-all;">' + record.content + '</td>';
                 html += '<td style="text-align: center;">' + record.quantity + '</td>';
                 html += '<td>' + record.creator + '</td>';
                 html += '<td style="font-size: 13px; color: #666;">' + record.time + '</td>';
@@ -616,7 +616,7 @@
                 const row = [
                     record.number,
                     record.type,
-                    '"' + record.content + '"',
+                    '"' + record.content.replace(/"/g, '""') + '"',
                     record.quantity,
                     record.note1,
                     record.note2,
@@ -654,95 +654,92 @@
         // 打开摄像头
         function openCamera() {
             const modal = document.getElementById('cameraModal');
-            const video = document.getElementById('video');
+            const statusDiv = document.getElementById('scanStatus');
             
             modal.classList.add('active');
+            statusDiv.textContent = '初始化摄像头...';
+            statusDiv.className = 'scan-status';
             
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(function(s) {
-                    stream = s;
-                    video.srcObject = stream;
-                    scanning = true;
-                    scanBarcode();
-                })
-                .catch(function(err) {
-                    alert('无法访问摄像头：' + err.message);
-                    closeCamera();
-                });
+            // 创建扫码器
+            html5QrCode = new Html5Qrcode("reader");
+            
+            // 配置扫码器
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            // 启动扫码
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanError
+            ).then(function() {
+                statusDiv.textContent = '请对准条码或二维码...';
+            }).catch(function(err) {
+                statusDiv.textContent = '无法启动摄像头：' + err;
+                console.error(err);
+            });
         }
 
-        // 关闭摄像头
-        function closeCamera() {
-            scanning = false;
-            const modal = document.getElementById('cameraModal');
-            const video = document.getElementById('video');
-            
-            if (stream) {
-                stream.getTracks().forEach(function(track) {
-                    track.stop();
-                });
-                stream = null;
-            }
-            
-            video.srcObject = null;
-            modal.classList.remove('active');
-        }
-
-        // 扫描条码
-        function scanBarcode() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const resultDiv = document.getElementById('scanResult');
-            
-            function tick() {
-                if (!scanning) return;
-                
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    
-                    // 尝试解析二维码
-                    if (typeof jsQR !== 'undefined') {
-                        const code = jsQR(imageData.data, imageData.width, imageData.height);
-                        if (code) {
-                            handleScanResult(code.data);
-                            return;
-                        }
-                    }
-                }
-                
-                requestAnimationFrame(tick);
-            }
-            
-            tick();
-        }
-
-        // 处理扫描结果
-        function handleScanResult(data) {
+        // 扫码成功回调
+        function onScanSuccess(decodedText, decodedResult) {
             const input = document.getElementById('barcodeInput');
-            const resultDiv = document.getElementById('scanResult');
+            const statusDiv = document.getElementById('scanStatus');
             
-            input.value = data;
-            resultDiv.textContent = '扫描成功：' + data;
-            resultDiv.style.display = 'block';
+            // 显示成功信息
+            statusDiv.textContent = '✓ 扫描成功：' + decodedText;
+            statusDiv.className = 'scan-status scan-success';
             
-            // 自动添加
+            // 填充到输入框
+            input.value = decodedText;
+            
+            // 停止扫描
+            if (html5QrCode) {
+                html5QrCode.stop().then(function() {
+                    html5QrCode = null;
+                }).catch(function(err) {
+                    console.error(err);
+                });
+            }
+            
+            // 延迟添加记录并关闭
             setTimeout(function() {
                 addRecord();
-                resultDiv.style.display = 'none';
                 
-                // 如果是连续扫码模式，继续扫描
+                // 如果是连续扫码模式，重新打开摄像头
                 if (document.getElementById('continuousMode').checked) {
-                    scanning = true;
-                    scanBarcode();
+                    setTimeout(function() {
+                        openCamera();
+                    }, 500);
                 } else {
                     closeCamera();
                 }
             }, 1000);
+        }
+
+        // 扫码错误回调
+        function onScanError(errorMessage) {
+            // 正常的扫描过程会频繁触发这个，忽略即可
+        }
+
+        // 关闭摄像头
+        function closeCamera() {
+            const modal = document.getElementById('cameraModal');
+            
+            if (html5QrCode) {
+                html5QrCode.stop().then(function() {
+                    html5QrCode = null;
+                    modal.classList.remove('active');
+                }).catch(function(err) {
+                    console.error(err);
+                    modal.classList.remove('active');
+                });
+            } else {
+                modal.classList.remove('active');
+            }
         }
     </script>
 </body>
