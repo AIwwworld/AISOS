@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓储扫码管理工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #43a047;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .user-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .user-input input {
+            padding: 5px 10px;
+            border: 1px solid #66bb6a;
+            background: #388e3c;
+            color: white;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .user-input input::placeholder {
+            color: #c8e6c9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .scan-mode {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #43a047;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #43a047;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #388e3c;
+        }
+
+        .btn-danger {
+            background: #e53935;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c62828;
+        }
+
+        .hint {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 10px 10px 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: #43a047;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .stats {
+            padding: 10px 16px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #43a047;
+            color: white;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+
+        tbody tr:hover {
+            background: #e8f5e9;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .delete-btn {
+            color: #e53935;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .delete-btn:hover {
+            color: #c62828;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .info-box h3 {
+            color: #1565c0;
+            margin-bottom: 8px;
+        }
+
+        .info-box ul {
+            list-style: none;
+            color: #1565c0;
+            font-size: 14px;
+        }
+
+        .info-box li {
+            margin: 4px 0;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>仓储扫码管理工具</h1>
+            <div class="user-input">
+                <span>操作人：</span>
+                <input type="text" id="username" placeholder="输入姓名" value="操作用户">
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 扫码输入区 -->
+        <div class="card">
+            <div class="card-title">
+                📷 扫码录入
+                <label class="scan-mode">
+                    <input type="checkbox" id="continuousMode">
+                    <span>连续扫码模式</span>
+                </label>
+            </div>
+            <div class="input-group">
+                <input type="text" id="barcodeInput" placeholder="扫描条码或手动输入..." autofocus>
+                <button class="btn btn-primary" onclick="addRecord()">
+                    ➕ 添加
+                </button>
+            </div>
+            <div class="hint">
+                💡 提示：使用扫码枪时，扫描后会自动录入。开启"连续扫码模式"可快速批量扫描。
+            </div>
+        </div>
+
+        <!-- 操作栏 -->
+        <div class="card">
+            <div class="toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="搜索内容或类型..." oninput="filterRecords()">
+                </div>
+                <div class="stats">
+                    总数: <span id="totalCount">0</span>
+                </div>
+                <button class="btn btn-primary" onclick="exportToExcel()">
+                    📥 导出Excel
+                </button>
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    🗑️ 清空数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据列表 -->
+        <div class="card">
+            <div id="tableContainer"></div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <h3>使用说明：</h3>
+            <ul>
+                <li>• 连接扫码枪后，扫描条码会自动录入到输入框</li>
+                <li>• 开启"连续扫码模式"后，每次添加后会自动聚焦输入框，方便连续扫描</li>
+                <li>• 支持手动输入条码内容并添加</li>
+                <li>• 点击"导出Excel"可导出CSV格式文件（Excel可直接打开）</li>
+                <li>• 数据自动保存在浏览器本地，刷新页面不会丢失</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let records = [];
+
+        // 页面加载时读取本地数据
+        window.onload = function() {
+            loadData();
+            renderTable();
+            
+            // 绑定回车键
+            document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addRecord();
+                }
+            });
+        };
+
+        // 加载数据
+        function loadData() {
+            const data = localStorage.getItem('scanRecords');
+            if (data) {
+                records = JSON.parse(data);
+            }
+        }
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('scanRecords', JSON.stringify(records));
+        }
+
+        // 添加记录
+        function addRecord() {
+            const input = document.getElementById('barcodeInput');
+            const username = document.getElementById('username').value || '操作用户';
+            const content = input.value.trim();
+            
+            if (!content) return;
+
+            // 判断类型
+            let type = '二维码';
+            if (/^[0-9]{8,13}$/.test(content)) {
+                type = '条形码';
+            } else if (content.includes('CODE_128')) {
+                type = '条形码（CODE_128）';
+            }
+
+            // 创建新记录
+            const record = {
+                id: Date.now(),
+                number: records.length + 1,
+                type: type,
+                content: content,
+                quantity: 1,
+                note1: '',
+                note2: '',
+                note3: '',
+                creator: username,
+                time: formatDateTime(new Date())
+            };
+
+            records.unshift(record);
+            saveData();
+            renderTable();
+            
+            input.value = '';
+            
+            // 连续扫码模式
+            if (document.getElementById('continuousMode').checked) {
+                setTimeout(() => input.focus(), 100);
+            }
+        }
+
+        // 格式化时间
+        function formatDateTime(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // 删除记录
+        function deleteRecord(id) {
+            if (confirm('确定要删除这条记录吗？')) {
+                records = records.filter(r => r.id !== id);
+                saveData();
+                renderTable();
+            }
+        }
+
+        // 筛选记录
+        function filterRecords() {
+            renderTable();
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredRecords = records.filter(r => 
+                r.content.toLowerCase().includes(searchTerm) || 
+                r.type.includes(searchTerm)
+            );
+
+            document.getElementById('totalCount').textContent = records.length;
+
+            const container = document.getElementById('tableContainer');
+
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        <p style="font-size: 18px; margin-bottom: 8px;">暂无扫码记录</p>
+                        <p style="font-size: 14px;">开始扫描或输入条码内容</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>类型</th>
+                                <th>扫码内容</th>
+                                <th style="text-align: center;">数量</th>
+                                <th>操作人</th>
+                                <th>扫码时间</th>
+                                <th style="text-align: center;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            filteredRecords.forEach(record => {
+                html += `
+                    <tr>
+                        <td>${record.number}</td>
+                        <td><span class="type-badge">${record.type}</span></td>
+                        <td style="font-family: monospace; font-size: 13px;">${record.content}</td>
+                        <td style="text-align: center;">${record.quantity}</td>
+                        <td>${record.creator}</td>
+                        <td style="font-size: 13px; color: #666;">${record.time}</td>
+                        <td style="text-align: center;">
+                            <span class="delete-btn" onclick="deleteRecord(${record.id})" title="删除">🗑️</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // 导出Excel
+        function exportToExcel() {
+            if (records.length === 0) {
+                alert('暂无数据可导出');
+                return;
+            }
+
+            const headers = ['编号', '类型', '扫码内容', '数量', '备注1', '备注2', '备注3', '创建者', '最后扫码时间'];
+            let csvContent = '\ufeff' + headers.join(',') + '\n';
+
+            records.forEach(record => {
+                const row = [
+                    record.number,
+                    record.type,
+                    `"${record.content}"`,
+                    record.quantity,
+                    record.note1,
+                    record.note2,
+                    record.note3,
+                    record.creator,
+                    record.time
+                ].join(',');
+                csvContent += row + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const date = new Date();
+            const filename = `扫码记录_${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}.csv`;
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 清空数据
+        function clearAllData() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                records = [];
+                saveData();
+                renderTable();
+            }
+        }
+    </script>
+</body>
+</html>
