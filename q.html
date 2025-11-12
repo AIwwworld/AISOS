@@ -75,6 +75,7 @@
             margin-bottom: 20px;
             font-size: 18px;
             font-weight: bold;
+            flex-wrap: wrap;
         }
 
         .scan-mode {
@@ -89,10 +90,12 @@
         .input-group {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .input-group input {
             flex: 1;
+            min-width: 200px;
             padding: 12px 16px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
@@ -116,6 +119,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -125,6 +129,15 @@
 
         .btn-primary:hover {
             background: #388e3c;
+        }
+
+        .btn-secondary {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1976d2;
         }
 
         .btn-danger {
@@ -270,6 +283,61 @@
             margin: 4px 0;
         }
 
+        /* 摄像头扫码弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .scan-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
         @media (max-width: 768px) {
             .toolbar {
                 flex-direction: column;
@@ -286,6 +354,11 @@
 
             th, td {
                 padding: 8px 4px;
+            }
+
+            .scan-mode {
+                margin-left: 0;
+                margin-top: 10px;
             }
         }
     </style>
@@ -313,12 +386,15 @@
             </div>
             <div class="input-group">
                 <input type="text" id="barcodeInput" placeholder="扫描条码或手动输入..." autofocus>
-                <button class="btn btn-primary" onclick="addRecord()">
+                <button class="btn btn-secondary" id="cameraBtn">
+                    📸 打开摄像头
+                </button>
+                <button class="btn btn-primary" id="addBtn">
                     ➕ 添加
                 </button>
             </div>
             <div class="hint">
-                💡 提示：使用扫码枪时，扫描后会自动录入。开启"连续扫码模式"可快速批量扫描。
+                💡 提示：可以手动输入、使用扫码枪，或点击"打开摄像头"用手机扫描二维码/条形码。
             </div>
         </div>
 
@@ -327,15 +403,15 @@
             <div class="toolbar">
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="搜索内容或类型..." oninput="filterRecords()">
+                    <input type="text" id="searchInput" placeholder="搜索内容或类型...">
                 </div>
                 <div class="stats">
                     总数: <span id="totalCount">0</span>
                 </div>
-                <button class="btn btn-primary" onclick="exportToExcel()">
+                <button class="btn btn-primary" id="exportBtn">
                     📥 导出Excel
                 </button>
-                <button class="btn btn-danger" onclick="clearAllData()">
+                <button class="btn btn-danger" id="clearBtn">
                     🗑️ 清空数据
                 </button>
             </div>
@@ -350,7 +426,8 @@
         <div class="info-box">
             <h3>使用说明：</h3>
             <ul>
-                <li>• 连接扫码枪后，扫描条码会自动录入到输入框</li>
+                <li>• <strong>电脑使用</strong>：连接扫码枪后，扫描条码会自动录入到输入框</li>
+                <li>• <strong>手机使用</strong>：点击"打开摄像头"按钮，对准条码/二维码扫描</li>
                 <li>• 开启"连续扫码模式"后，每次添加后会自动聚焦输入框，方便连续扫描</li>
                 <li>• 支持手动输入条码内容并添加</li>
                 <li>• 点击"导出Excel"可导出CSV格式文件（Excel可直接打开）</li>
@@ -359,27 +436,56 @@
         </div>
     </div>
 
+    <!-- 摄像头扫码弹窗 -->
+    <div class="modal" id="cameraModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeCamera">关闭</button>
+            <h3 style="margin-bottom: 10px;">对准条码/二维码</h3>
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display: none;"></canvas>
+            <div id="scanResult" class="scan-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- 使用 jsQR 库来解析二维码 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+
     <script>
         let records = [];
+        let stream = null;
+        let scanning = false;
 
         // 页面加载时读取本地数据
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', function() {
             loadData();
             renderTable();
             
-            // 绑定回车键
+            // 绑定事件
+            document.getElementById('addBtn').addEventListener('click', addRecord);
+            document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+            document.getElementById('clearBtn').addEventListener('click', clearAllData);
+            document.getElementById('searchInput').addEventListener('input', filterRecords);
+            document.getElementById('cameraBtn').addEventListener('click', openCamera);
+            document.getElementById('closeCamera').addEventListener('click', closeCamera);
+            
+            // 回车键添加
             document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     addRecord();
                 }
             });
-        };
+        });
 
         // 加载数据
         function loadData() {
             const data = localStorage.getItem('scanRecords');
             if (data) {
-                records = JSON.parse(data);
+                try {
+                    records = JSON.parse(data);
+                } catch(e) {
+                    records = [];
+                }
             }
         }
 
@@ -394,7 +500,10 @@
             const username = document.getElementById('username').value || '操作用户';
             const content = input.value.trim();
             
-            if (!content) return;
+            if (!content) {
+                alert('请输入或扫描条码内容');
+                return;
+            }
 
             // 判断类型
             let type = '二维码';
@@ -426,7 +535,9 @@
             
             // 连续扫码模式
             if (document.getElementById('continuousMode').checked) {
-                setTimeout(() => input.focus(), 100);
+                setTimeout(function() {
+                    input.focus();
+                }, 100);
             }
         }
 
@@ -438,13 +549,15 @@
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const seconds = String(date.getSeconds()).padStart(2, '0');
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
         }
 
         // 删除记录
         function deleteRecord(id) {
             if (confirm('确定要删除这条记录吗？')) {
-                records = records.filter(r => r.id !== id);
+                records = records.filter(function(r) {
+                    return r.id !== id;
+                });
                 saveData();
                 renderTable();
             }
@@ -458,67 +571,34 @@
         // 渲染表格
         function renderTable() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filteredRecords = records.filter(r => 
-                r.content.toLowerCase().includes(searchTerm) || 
-                r.type.includes(searchTerm)
-            );
+            const filteredRecords = records.filter(function(r) {
+                return r.content.toLowerCase().includes(searchTerm) || r.type.includes(searchTerm);
+            });
 
             document.getElementById('totalCount').textContent = records.length;
 
             const container = document.getElementById('tableContainer');
 
             if (filteredRecords.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                        <p style="font-size: 18px; margin-bottom: 8px;">暂无扫码记录</p>
-                        <p style="font-size: 14px;">开始扫描或输入条码内容</p>
-                    </div>
-                `;
+                container.innerHTML = '<div class="empty-state"><p style="font-size: 18px; margin-bottom: 8px;">暂无扫码记录</p><p style="font-size: 14px;">开始扫描或输入条码内容</p></div>';
                 return;
             }
 
-            let html = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>序号</th>
-                                <th>类型</th>
-                                <th>扫码内容</th>
-                                <th style="text-align: center;">数量</th>
-                                <th>操作人</th>
-                                <th>扫码时间</th>
-                                <th style="text-align: center;">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            let html = '<div class="table-container"><table><thead><tr><th>序号</th><th>类型</th><th>扫码内容</th><th style="text-align: center;">数量</th><th>操作人</th><th>扫码时间</th><th style="text-align: center;">操作</th></tr></thead><tbody>';
 
-            filteredRecords.forEach(record => {
-                html += `
-                    <tr>
-                        <td>${record.number}</td>
-                        <td><span class="type-badge">${record.type}</span></td>
-                        <td style="font-family: monospace; font-size: 13px;">${record.content}</td>
-                        <td style="text-align: center;">${record.quantity}</td>
-                        <td>${record.creator}</td>
-                        <td style="font-size: 13px; color: #666;">${record.time}</td>
-                        <td style="text-align: center;">
-                            <span class="delete-btn" onclick="deleteRecord(${record.id})" title="删除">🗑️</span>
-                        </td>
-                    </tr>
-                `;
+            filteredRecords.forEach(function(record) {
+                html += '<tr>';
+                html += '<td>' + record.number + '</td>';
+                html += '<td><span class="type-badge">' + record.type + '</span></td>';
+                html += '<td style="font-family: monospace; font-size: 13px;">' + record.content + '</td>';
+                html += '<td style="text-align: center;">' + record.quantity + '</td>';
+                html += '<td>' + record.creator + '</td>';
+                html += '<td style="font-size: 13px; color: #666;">' + record.time + '</td>';
+                html += '<td style="text-align: center;"><span class="delete-btn" onclick="deleteRecord(' + record.id + ')" title="删除">🗑️</span></td>';
+                html += '</tr>';
             });
 
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
+            html += '</tbody></table></div>';
             container.innerHTML = html;
         }
 
@@ -532,11 +612,11 @@
             const headers = ['编号', '类型', '扫码内容', '数量', '备注1', '备注2', '备注3', '创建者', '最后扫码时间'];
             let csvContent = '\ufeff' + headers.join(',') + '\n';
 
-            records.forEach(record => {
+            records.forEach(function(record) {
                 const row = [
                     record.number,
                     record.type,
-                    `"${record.content}"`,
+                    '"' + record.content + '"',
                     record.quantity,
                     record.note1,
                     record.note2,
@@ -552,7 +632,7 @@
             const url = URL.createObjectURL(blob);
             
             const date = new Date();
-            const filename = `扫码记录_${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}.csv`;
+            const filename = '扫码记录_' + date.getFullYear() + String(date.getMonth()+1).padStart(2,'0') + String(date.getDate()).padStart(2,'0') + '.csv';
             
             link.setAttribute('href', url);
             link.setAttribute('download', filename);
@@ -569,6 +649,100 @@
                 saveData();
                 renderTable();
             }
+        }
+
+        // 打开摄像头
+        function openCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('video');
+            
+            modal.classList.add('active');
+            
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function(s) {
+                    stream = s;
+                    video.srcObject = stream;
+                    scanning = true;
+                    scanBarcode();
+                })
+                .catch(function(err) {
+                    alert('无法访问摄像头：' + err.message);
+                    closeCamera();
+                });
+        }
+
+        // 关闭摄像头
+        function closeCamera() {
+            scanning = false;
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('video');
+            
+            if (stream) {
+                stream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            modal.classList.remove('active');
+        }
+
+        // 扫描条码
+        function scanBarcode() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const resultDiv = document.getElementById('scanResult');
+            
+            function tick() {
+                if (!scanning) return;
+                
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    // 尝试解析二维码
+                    if (typeof jsQR !== 'undefined') {
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        if (code) {
+                            handleScanResult(code.data);
+                            return;
+                        }
+                    }
+                }
+                
+                requestAnimationFrame(tick);
+            }
+            
+            tick();
+        }
+
+        // 处理扫描结果
+        function handleScanResult(data) {
+            const input = document.getElementById('barcodeInput');
+            const resultDiv = document.getElementById('scanResult');
+            
+            input.value = data;
+            resultDiv.textContent = '扫描成功：' + data;
+            resultDiv.style.display = 'block';
+            
+            // 自动添加
+            setTimeout(function() {
+                addRecord();
+                resultDiv.style.display = 'none';
+                
+                // 如果是连续扫码模式，继续扫描
+                if (document.getElementById('continuousMode').checked) {
+                    scanning = true;
+                    scanBarcode();
+                } else {
+                    closeCamera();
+                }
+            }, 1000);
         }
     </script>
 </body>
